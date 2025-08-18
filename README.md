@@ -1,86 +1,197 @@
-# Nhost Chatbot Application
+# AI Chatbot
 
-A modern chatbot application built with React, Nhost authentication, and Hasura GraphQL subscriptions.
+A production-ready AI chatbot built with React, TypeScript, Nhost, and Hasura GraphQL.
 
 ## Features
 
-- 🔐 Email authentication with Nhost Auth
-- 💬 Real-time chat interface
-- 🤖 AI chatbot responses
-- 📱 Responsive design
-- ⚡ GraphQL subscriptions for real-time updates
-- 🎨 Modern UI with Tailwind CSS
+- 🤖 **AI-Powered Conversations** - Integrated with OpenRouter API for intelligent responses
+- 🔐 **Secure Authentication** - User authentication powered by Nhost
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+- ⚡ **Real-time Updates** - Live message updates using GraphQL subscriptions
+- 🎨 **Modern UI** - Beautiful gradient design with smooth animations
+- 🔒 **Row-Level Security** - Secure data access with Hasura permissions
+- 📊 **Production Ready** - Optimized for performance and scalability
 
-## Setup Instructions
+## Tech Stack
 
-### 1. Create a Nhost Project
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Tailwind CSS
+- **Backend**: Nhost (PostgreSQL + Hasura GraphQL)
+- **Authentication**: Nhost Auth
+- **AI Integration**: OpenRouter API via n8n workflow
+- **Real-time**: GraphQL Subscriptions
+- **Icons**: Lucide React
 
-1. Go to [Nhost Console](https://app.nhost.io/)
-2. Create a new project
-3. Note your project's subdomain and region
+## Architecture
 
-### 2. Configure Database
+```
+Frontend (React) → Hasura GraphQL → n8n Workflow → OpenRouter API
+                ↓
+            PostgreSQL Database
+```
 
-Run this SQL in your Nhost database console to create the messages table:
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Nhost account and project
+- n8n instance (for AI workflow)
+- OpenRouter API key
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd nhost-chatbot
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Update `.env` with your Nhost configuration:
+   ```env
+   VITE_NHOST_SUBDOMAIN=your-nhost-subdomain
+   VITE_NHOST_REGION=your-nhost-region
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+## Database Schema
+
+### Tables
+
+- **users** - User profiles (managed by Nhost Auth)
+- **chats** - Chat conversations
+- **messages** - Individual messages with AI/user roles
+
+### Key Fields
 
 ```sql
-CREATE TABLE messages (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  content text NOT NULL,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  is_ai boolean DEFAULT false,
-  created_at timestamptz DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can read all messages" ON messages FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Users can insert their own messages" ON messages FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+-- messages table
+id: uuid (primary key)
+chat_id: uuid (foreign key)
+content: text (message content)
+role: text ('user' | 'assistant')
+is_ai: boolean
+user_id: uuid (foreign key)
+created_at: timestamp
 ```
 
-### 3. Environment Variables
+## Deployment
 
-1. Copy `.env.example` to `.env`
-2. Fill in your Nhost project details:
-
-```env
-REACT_APP_NHOST_SUBDOMAIN=your-project-subdomain
-REACT_APP_NHOST_REGION=your-region
-```
-
-### 4. Install and Run
+### Build for Production
 
 ```bash
-npm install
-npm run dev
+npm run build
 ```
 
-## Usage
+### Deploy to Vercel
 
-1. Create an account or sign in
-2. Start chatting with the AI assistant
-3. Messages are stored in real-time using GraphQL subscriptions
-4. All users can see all messages (perfect for a chat room experience)
-
-## Technology Stack
-
-- **Frontend**: React, TypeScript, Tailwind CSS
-- **Authentication**: Nhost Auth
-- **Database**: PostgreSQL (via Nhost)
-- **Real-time**: GraphQL subscriptions via Hasura
-- **Icons**: Lucide React
-- **Styling**: Tailwind CSS with custom gradients and animations
-
-## Project Structure
-
+```bash
+npm install -g vercel
+vercel --prod
 ```
-src/
-├── components/
-│   ├── Auth/          # Authentication components
-│   └── Chat/          # Chat interface components
-├── graphql/           # GraphQL queries and mutations
-├── lib/              # Configuration (Nhost, Apollo)
-└── App.tsx           # Main application component
+
+### Deploy to Netlify
+
+```bash
+npm run build
+# Upload dist/ folder to Netlify
 ```
+
+## Configuration
+
+### Hasura Permissions
+
+The app requires proper row-level security permissions:
+
+- **chats**: Users can only access their own chats
+- **messages**: Users can only access messages from their chats
+- **users**: Users can read their own profile data
+
+### n8n Workflow
+
+The AI integration requires an n8n workflow with:
+
+1. **Webhook Trigger** - Receives requests from Hasura Actions
+2. **Data Processing** - Extracts message and chat information
+3. **OpenRouter API Call** - Sends message to AI model
+4. **Database Insert** - Saves AI response to messages table
+5. **Response** - Returns message ID to Hasura
+
+## API Integration
+
+### Hasura Actions
+
+The app uses a Hasura Action called `sendMessage`:
+
+```graphql
+mutation SendMessage($chat_id: uuid!, $message: String!) {
+  sendMessage(chat_id: $chat_id, message: $message) {
+    id
+    content
+    role
+    created_at
+  }
+}
+```
+
+### OpenRouter Models
+
+Supported AI models (configurable in n8n):
+- `openai/gpt-oss-20b:free`
+- `z-ai/glm-4.5-air:free`
+- `qwen/qwen3-coder:free`
+- And many more...
+
+## Performance Optimizations
+
+- **React.memo** - Prevents unnecessary re-renders
+- **useCallback** - Optimizes function references
+- **GraphQL Subscriptions** - Efficient real-time updates
+- **Lazy Loading** - Components loaded on demand
+- **Error Boundaries** - Graceful error handling
+- **Connection Status** - Real-time connection monitoring
+
+## Security Features
+
+- **JWT Authentication** - Secure user sessions
+- **Row-Level Security** - Database-level access control
+- **Input Validation** - Prevents malicious input
+- **CORS Protection** - Secure API access
+- **Rate Limiting** - Prevents abuse (via Hasura)
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please open an issue on GitHub or contact the development team.
+
+---
+
+Built with ❤️ using modern web technologies
