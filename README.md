@@ -184,6 +184,8 @@ Supported AI models (configurable in n8n):
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+you can checkout the project by clicking on link : [ https://chatbot-dfkjh.netlify.app/ ]
+
 ## Support
 
 For support, please open an issue on GitHub or contact the development team.
